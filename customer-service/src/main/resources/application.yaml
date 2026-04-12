@@ -1,0 +1,19 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: customer-service
+  datasource:
+    url: ${CUSTOMER_DB_URL:jdbc:postgresql://localhost:5432/customers_db}
+    username: ${CUSTOMER_DB_USERNAME:devsu}
+    password: ${CUSTOMER_DB_PASSWORD:devsu}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
