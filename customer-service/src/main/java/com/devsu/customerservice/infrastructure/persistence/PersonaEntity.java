@@ -2,60 +2,32 @@ package com.devsu.customerservice.infrastructure.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+/** Base JPA mapping for the personal fields shared by customer persistence entities. */
+@Getter
 @MappedSuperclass
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter(AccessLevel.PACKAGE)
 public abstract class PersonaEntity {
 
-    @Column(nullable = false)
-    private String nombre;
+  @Column(nullable = false)
+  private String nombre;
 
-    private String genero;
+  private String genero;
 
-    private Integer edad;
+  private Integer edad;
 
-    @Column(nullable = false, unique = true)
-    private String identificacion;
+  @Column(nullable = false, unique = true)
+  private String identificacion;
 
-    @Column(nullable = false)
-    private String direccion;
+  @Column(nullable = false)
+  private String direccion;
 
-    @Column(nullable = false)
-    private String telefono;
+  @Column(nullable = false)
+  private String telefono;
 
-    protected PersonaEntity() {
-    }
-
-    protected PersonaEntity(String nombre, String genero, Integer edad, String identificacion,
-                            String direccion, String telefono) {
-        this.nombre = nombre;
-        this.genero = genero;
-        this.edad = edad;
-        this.identificacion = identificacion;
-        this.direccion = direccion;
-        this.telefono = telefono;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public String getGenero() {
-        return genero;
-    }
-
-    public Integer getEdad() {
-        return edad;
-    }
-
-    public String getIdentificacion() {
-        return identificacion;
-    }
-
-    public String getDireccion() {
-        return direccion;
-    }
-
-    public String getTelefono() {
-        return telefono;
-    }
 }

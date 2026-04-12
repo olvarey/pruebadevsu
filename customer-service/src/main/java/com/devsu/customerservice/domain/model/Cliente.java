@@ -1,55 +1,60 @@
 package com.devsu.customerservice.domain.model;
 
+import com.devsu.customerservice.domain.exception.DomainException;
+
+/** Customer aggregate root with the login and status fields required by the challenge. */
 public class Cliente extends Persona {
 
-    private final String clienteId;
-    private final String contrasena;
-    private final boolean estado;
+  private final String clienteId;
+  private final String contrasena;
+  private final boolean estado;
 
-    public Cliente(
-            String clienteId,
-            String nombre,
-            String genero,
-            Integer edad,
-            String identificacion,
-            String direccion,
-            String telefono,
-            String contrasena,
-            boolean estado
-    ) {
-        super(nombre, genero, edad, identificacion, direccion, telefono);
-        this.clienteId = requireText(clienteId, "clienteId");
-        this.contrasena = requireText(contrasena, "contrasena");
-        this.estado = estado;
-    }
+  /** Creates a customer and validates the required domain fields. */
+  public Cliente(String clienteId, DatosPersona datosPersona, String contrasena, boolean estado) {
+    super(datosPersona);
+    this.clienteId = requireText(clienteId, "clienteId");
+    this.contrasena = requireText(contrasena, "contrasena");
+    this.estado = estado;
+  }
 
-    public Cliente desactivar() {
-        return withEstado(false);
-    }
+  /** Returns a copy of this customer marked as inactive. */
+  public Cliente desactivar() {
+    return withEstado(false);
+  }
 
-    public Cliente withEstado(boolean nuevoEstado) {
-        return new Cliente(
-                clienteId,
-                nombre(),
-                genero(),
-                edad(),
-                identificacion(),
-                direccion(),
-                telefono(),
-                contrasena,
-                nuevoEstado
-        );
-    }
+  private Cliente withEstado(boolean nuevoEstado) {
+    return new Cliente(
+        clienteId,
+        new DatosPersona(
+            getNombre(),
+            getGenero(),
+            getEdad(),
+            getIdentificacion(),
+            getDireccion(),
+            getTelefono()),
+        contrasena,
+        nuevoEstado);
+  }
 
-    public String clienteId() {
-        return clienteId;
-    }
+  /** Returns the business identifier used by customer endpoints. */
+  public String getClienteId() {
+    return clienteId;
+  }
 
-    public String contrasena() {
-        return contrasena;
-    }
+  /** Returns the customer's password value. */
+  public String getContrasena() {
+    return contrasena;
+  }
 
-    public boolean estado() {
-        return estado;
+  /** Returns whether the customer is active. */
+  public boolean isEstado() {
+    return estado;
+  }
+
+  private static String requireText(String value, String field) {
+    if (value == null || value.isBlank()) {
+      throw new DomainException(field + " es requerido");
     }
+    return value.trim();
+  }
 }

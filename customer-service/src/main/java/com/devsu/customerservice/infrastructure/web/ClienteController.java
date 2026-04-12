@@ -5,6 +5,8 @@ import com.devsu.customerservice.application.dto.ClienteRequest;
 import com.devsu.customerservice.application.dto.ClienteResponse;
 import com.devsu.customerservice.application.usecase.ClienteUseCase;
 import jakarta.validation.Valid;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,47 +19,51 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
+/** REST controller for the customer CRUD API. */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/clientes")
 public class ClienteController {
 
-    private final ClienteUseCase clienteUseCase;
+  private final ClienteUseCase clienteUseCase;
 
-    public ClienteController(ClienteUseCase clienteUseCase) {
-        this.clienteUseCase = clienteUseCase;
-    }
+  /** Creates a customer from the provided request body. */
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  ClienteResponse create(@Valid @RequestBody ClienteRequest request) {
+    return clienteUseCase.create(request);
+  }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    ClienteResponse create(@Valid @RequestBody ClienteRequest request) {
-        return clienteUseCase.create(request);
-    }
+  /** Lists every registered customer. */
+  @GetMapping
+  List<ClienteResponse> list() {
+    return clienteUseCase.list();
+  }
 
-    @GetMapping
-    List<ClienteResponse> list() {
-        return clienteUseCase.list();
-    }
+  /** Returns the customer matching the provided business identifier. */
+  @GetMapping("/{clienteId}")
+  ClienteResponse get(@PathVariable String clienteId) {
+    return clienteUseCase.get(clienteId);
+  }
 
-    @GetMapping("/{clienteId}")
-    ClienteResponse get(@PathVariable String clienteId) {
-        return clienteUseCase.get(clienteId);
-    }
+  /** Replaces a customer using a complete customer representation. */
+  @PutMapping("/{clienteId}")
+  ClienteResponse replace(
+      @PathVariable String clienteId, @Valid @RequestBody ClienteRequest request) {
+    return clienteUseCase.replace(clienteId, request);
+  }
 
-    @PutMapping("/{clienteId}")
-    ClienteResponse replace(@PathVariable String clienteId, @Valid @RequestBody ClienteRequest request) {
-        return clienteUseCase.replace(clienteId, request);
-    }
+  /** Applies a partial update to a customer. */
+  @PatchMapping("/{clienteId}")
+  ClienteResponse patch(
+      @PathVariable String clienteId, @Valid @RequestBody ClientePatchRequest request) {
+    return clienteUseCase.patch(clienteId, request);
+  }
 
-    @PatchMapping("/{clienteId}")
-    ClienteResponse patch(@PathVariable String clienteId, @Valid @RequestBody ClientePatchRequest request) {
-        return clienteUseCase.patch(clienteId, request);
-    }
-
-    @DeleteMapping("/{clienteId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    void delete(@PathVariable String clienteId) {
-        clienteUseCase.delete(clienteId);
-    }
+  /** Marks a customer as inactive. */
+  @DeleteMapping("/{clienteId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  void delete(@PathVariable String clienteId) {
+    clienteUseCase.delete(clienteId);
+  }
 }

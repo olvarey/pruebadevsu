@@ -1,10 +1,11 @@
 package com.devsu.customerservice.infrastructure.persistence;
 
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
-
+/** Spring Data repository for customer persistence entities. */
 public interface SpringDataClienteRepository extends JpaRepository<ClienteEntity, String> {
 
-    Optional<ClienteEntity> findByIdentificacion(String identificacion);
+  /** Finds a customer entity by its unique personal identification. */
+  Optional<ClienteEntity> findByIdentificacion(String identificacion);
 }

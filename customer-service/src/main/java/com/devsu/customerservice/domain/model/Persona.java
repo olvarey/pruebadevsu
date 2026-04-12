@@ -1,64 +1,51 @@
 package com.devsu.customerservice.domain.model;
 
-import com.devsu.customerservice.domain.exception.DomainException;
-
+/** Common personal data shared by customer-related domain models. */
 public class Persona {
 
-    private final String nombre;
-    private final String genero;
-    private final Integer edad;
-    private final String identificacion;
-    private final String direccion;
-    private final String telefono;
+  private final String nombre;
+  private final String genero;
+  private final Integer edad;
+  private final String identificacion;
+  private final String direccion;
+  private final String telefono;
 
-    protected Persona(
-            String nombre,
-            String genero,
-            Integer edad,
-            String identificacion,
-            String direccion,
-            String telefono
-    ) {
-        this.nombre = requireText(nombre, "nombre");
-        this.genero = normalizeOptional(genero);
-        this.edad = edad;
-        this.identificacion = requireText(identificacion, "identificacion");
-        this.direccion = requireText(direccion, "direccion");
-        this.telefono = requireText(telefono, "telefono");
-    }
+  protected Persona(DatosPersona datosPersona) {
+    this.nombre = datosPersona.nombre();
+    this.genero = datosPersona.genero();
+    this.edad = datosPersona.edad();
+    this.identificacion = datosPersona.identificacion();
+    this.direccion = datosPersona.direccion();
+    this.telefono = datosPersona.telefono();
+  }
 
-    protected static String requireText(String value, String field) {
-        if (value == null || value.isBlank()) {
-            throw new DomainException(field + " es requerido");
-        }
-        return value.trim();
-    }
+  /** Returns the person's name. */
+  public String getNombre() {
+    return nombre;
+  }
 
-    protected static String normalizeOptional(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
-    }
+  /** Returns the person's gender when it was provided. */
+  public String getGenero() {
+    return genero;
+  }
 
-    public String nombre() {
-        return nombre;
-    }
+  /** Returns the person's age when it was provided. */
+  public Integer getEdad() {
+    return edad;
+  }
 
-    public String genero() {
-        return genero;
-    }
+  /** Returns the person's government identification value. */
+  public String getIdentificacion() {
+    return identificacion;
+  }
 
-    public Integer edad() {
-        return edad;
-    }
+  /** Returns the person's address. */
+  public String getDireccion() {
+    return direccion;
+  }
 
-    public String identificacion() {
-        return identificacion;
-    }
-
-    public String direccion() {
-        return direccion;
-    }
-
-    public String telefono() {
-        return telefono;
-    }
+  /** Returns the person's phone number. */
+  public String getTelefono() {
+    return telefono;
+  }
 }

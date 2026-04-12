@@ -8,96 +8,93 @@ import com.devsu.customerservice.domain.exception.ClienteDuplicadoException;
 import com.devsu.customerservice.domain.exception.ClienteNoEncontradoException;
 import com.devsu.customerservice.domain.model.Cliente;
 import com.devsu.customerservice.domain.repository.ClienteRepository;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
+/** Coordinates customer application rules and transaction boundaries. */
+@RequiredArgsConstructor
 @Service
 public class ClienteUseCase {
 
-    private final ClienteRepository clienteRepository;
+  private final ClienteRepository clienteRepository;
+  private final ClienteMapper clienteMapper;
 
-    public ClienteUseCase(ClienteRepository clienteRepository) {
-        this.clienteRepository = clienteRepository;
+  /** Creates a customer after validating customer identifier and identification uniqueness. */
+  @Transactional
+  public ClienteResponse create(ClienteRequest request) {
+    ensureUniqueForCreate(request.clienteId(), request.identificacion());
+    return clienteMapper.toResponse(clienteRepository.save(clienteMapper.toDomain(request)));
+  }
+
+  /** Returns the customer associated with the provided business identifier. */
+  @Transactional(readOnly = true)
+  public ClienteResponse get(String clienteId) {
+    return clienteMapper.toResponse(find(clienteId));
+  }
+
+  /** Returns every registered customer. */
+  @Transactional(readOnly = true)
+  public List<ClienteResponse> list() {
+    return clienteRepository.findAll().stream().map(clienteMapper::toResponse).toList();
+  }
+
+  /** Replaces an existing customer with a complete customer representation. */
+  @Transactional
+  public ClienteResponse replace(String clienteId, ClienteRequest request) {
+    find(clienteId);
+    if (hasConflictingClienteId(clienteId, request.clienteId())) {
+      throw new ClienteDuplicadoException("clienteId ya existe");
     }
+    ensureIdentificationAvailable(request.identificacion(), clienteId);
+    return clienteMapper.toResponse(clienteRepository.save(clienteMapper.toDomain(request)));
+  }
 
-    @Transactional
-    public ClienteResponse create(ClienteRequest request) {
-        ensureUniqueForCreate(request.clienteId(), request.identificacion());
-        return ClienteMapper.toResponse(clienteRepository.save(ClienteMapper.toDomain(request)));
+  /** Applies the provided non-null customer fields to an existing customer. */
+  @Transactional
+  public ClienteResponse patch(String clienteId, ClientePatchRequest request) {
+    Cliente current = find(clienteId);
+    Cliente updated = clienteMapper.mergePatch(current, request);
+    ensureIdentificationAvailable(updated.getIdentificacion(), clienteId);
+
+    return clienteMapper.toResponse(clienteRepository.save(updated));
+  }
+
+  /** Marks a customer as inactive. */
+  @Transactional
+  public void delete(String clienteId) {
+    clienteRepository.save(find(clienteId).desactivar());
+  }
+
+  private Cliente find(String clienteId) {
+    return clienteRepository.findByClienteId(clienteId)
+        .orElseThrow(() -> new ClienteNoEncontradoException(clienteId));
+  }
+
+  private void ensureUniqueForCreate(String clienteId, String identificacion) {
+    if (clienteRepository.existsByClienteId(clienteId)) {
+      throw new ClienteDuplicadoException("clienteId ya existe");
     }
-
-    @Transactional(readOnly = true)
-    public ClienteResponse get(String clienteId) {
-        return ClienteMapper.toResponse(find(clienteId));
+    if (clienteRepository.findByIdentificacion(identificacion).isPresent()) {
+      throw new ClienteDuplicadoException("identificacion ya existe");
     }
+  }
 
-    @Transactional(readOnly = true)
-    public List<ClienteResponse> list() {
-        return clienteRepository.findAll().stream()
-                .map(ClienteMapper::toResponse)
-                .toList();
+  private void ensureIdentificationAvailable(String identificacion, String currentClienteId) {
+    boolean belongsToAnotherCustomer =
+        clienteRepository
+            .findByIdentificacion(identificacion)
+            .filter(existing -> !existing.getClienteId().equals(currentClienteId))
+            .isPresent();
+
+    if (belongsToAnotherCustomer) {
+      throw new ClienteDuplicadoException("identificacion ya existe");
     }
+  }
 
-    @Transactional
-    public ClienteResponse replace(String clienteId, ClienteRequest request) {
-        find(clienteId);
-        if (!clienteId.equals(request.clienteId()) && clienteRepository.existsByClienteId(request.clienteId())) {
-            throw new ClienteDuplicadoException("clienteId ya existe");
-        }
-        ensureIdentificationAvailable(request.identificacion(), clienteId);
-        return ClienteMapper.toResponse(clienteRepository.save(ClienteMapper.toDomain(request)));
-    }
-
-    @Transactional
-    public ClienteResponse patch(String clienteId, ClientePatchRequest request) {
-        Cliente current = find(clienteId);
-        String identificacion = valueOrCurrent(request.identificacion(), current.identificacion());
-        ensureIdentificationAvailable(identificacion, clienteId);
-
-        Cliente updated = new Cliente(
-                current.clienteId(),
-                valueOrCurrent(request.nombre(), current.nombre()),
-                valueOrCurrent(request.genero(), current.genero()),
-                request.edad() != null ? request.edad() : current.edad(),
-                identificacion,
-                valueOrCurrent(request.direccion(), current.direccion()),
-                valueOrCurrent(request.telefono(), current.telefono()),
-                valueOrCurrent(request.contrasena(), current.contrasena()),
-                request.estado() != null ? request.estado() : current.estado()
-        );
-        return ClienteMapper.toResponse(clienteRepository.save(updated));
-    }
-
-    @Transactional
-    public void delete(String clienteId) {
-        clienteRepository.save(find(clienteId).desactivar());
-    }
-
-    private Cliente find(String clienteId) {
-        return clienteRepository.findByClienteId(clienteId)
-                .orElseThrow(() -> new ClienteNoEncontradoException(clienteId));
-    }
-
-    private void ensureUniqueForCreate(String clienteId, String identificacion) {
-        if (clienteRepository.existsByClienteId(clienteId)) {
-            throw new ClienteDuplicadoException("clienteId ya existe");
-        }
-        if (clienteRepository.findByIdentificacion(identificacion).isPresent()) {
-            throw new ClienteDuplicadoException("identificacion ya existe");
-        }
-    }
-
-    private void ensureIdentificationAvailable(String identificacion, String currentClienteId) {
-        clienteRepository.findByIdentificacion(identificacion)
-                .filter(existing -> !existing.clienteId().equals(currentClienteId))
-                .ifPresent(existing -> {
-                    throw new ClienteDuplicadoException("identificacion ya existe");
-                });
-    }
-
-    private String valueOrCurrent(String value, String current) {
-        return value != null ? value : current;
-    }
+  private boolean hasConflictingClienteId(String currentClienteId, String requestedClienteId) {
+    return !currentClienteId.equals(requestedClienteId)
+        && clienteRepository.existsByClienteId(requestedClienteId);
+  }
 }
