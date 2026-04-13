@@ -248,6 +248,75 @@ Build all modules:
 ./mvnw clean package
 ```
 
+## Run With Docker Compose
+
+Build and start the full local environment:
+
+```bash
+docker compose up --build
+```
+
+This starts:
+
+- `customer-service` on port `8081`
+- `account-service` on port `8082`
+- PostgreSQL for `customer-service` on local port `5433`
+- PostgreSQL for `account-service` on local port `5434`
+- RabbitMQ on local port `5672`
+- RabbitMQ Management UI on local port `15672`
+
+RabbitMQ Management UI:
+
+```text
+http://localhost:15672
+```
+
+Default credentials:
+
+```text
+guest / guest
+```
+
+Create a customer:
+
+```bash
+curl -i -X POST http://localhost:8081/api/clientes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clienteId": "CLI-001",
+    "nombre": "Jose Lema",
+    "genero": "M",
+    "edad": 35,
+    "identificacion": "10001",
+    "direccion": "Otavalo sn y principal",
+    "telefono": "098254785",
+    "contrasena": "1234",
+    "estado": true
+  }'
+```
+
+List customers:
+
+```bash
+curl http://localhost:8081/api/clientes
+```
+
+Customer create, update, patch, and delete operations publish customer events to
+RabbitMQ. `account-service` consumes those events from the
+`account.customer.events` queue and logs the received payload.
+
+Stop the environment:
+
+```bash
+docker compose down
+```
+
+Stop the environment and remove database volumes:
+
+```bash
+docker compose down -v
+```
+
 Run `customer-service` locally:
 
 ```bash

@@ -9,9 +9,9 @@ import lombok.Setter;
 
 /** Base JPA mapping for the personal fields shared by customer persistence entities. */
 @Getter
+@Setter
 @MappedSuperclass
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Setter(AccessLevel.PACKAGE)
 public abstract class PersonaEntity {
 
   @Column(nullable = false)
@@ -29,5 +29,4 @@ public abstract class PersonaEntity {
 
   @Column(nullable = false)
   private String telefono;
-
 }

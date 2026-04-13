@@ -12,8 +12,8 @@ import lombok.Setter;
 /** JPA entity that stores customer rows in the clientes table. */
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Setter(AccessLevel.PACKAGE)
 @Table(name = "clientes")
 public class ClienteEntity extends PersonaEntity {
 
