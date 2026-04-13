@@ -1,34 +1,18 @@
 services:
-  customer-db:
+  app-db:
     image: postgres:16-alpine
-    container_name: devsu-customer-db
+    container_name: devsu-app-db
     environment:
-      POSTGRES_DB: customers_db
+      POSTGRES_DB: devsu_db
       POSTGRES_USER: devsu
       POSTGRES_PASSWORD: devsu
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - customer-db-data:/var/lib/postgresql/data
+      - app-db-data:/var/lib/postgresql/data
+      - ./BaseDatos.sql:/docker-entrypoint-initdb.d/BaseDatos.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U devsu -d customers_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  account-db:
-    image: postgres:16-alpine
-    container_name: devsu-account-db
-    environment:
-      POSTGRES_DB: accounts_db
-      POSTGRES_USER: devsu
-      POSTGRES_PASSWORD: devsu
-    ports:
-      - "5434:5432"
-    volumes:
-      - account-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U devsu -d accounts_db"]
+      test: ["CMD-SHELL", "pg_isready -U devsu -d devsu_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -53,12 +37,12 @@ services:
         SERVICE_NAME: customer-service
     container_name: devsu-customer-service
     depends_on:
-      customer-db:
+      app-db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
     environment:
-      CUSTOMER_DB_URL: jdbc:postgresql://customer-db:5432/customers_db
+      CUSTOMER_DB_URL: jdbc:postgresql://app-db:5432/devsu_db?currentSchema=customer_service
       CUSTOMER_DB_USERNAME: devsu
       CUSTOMER_DB_PASSWORD: devsu
       RABBITMQ_HOST: rabbitmq
@@ -78,12 +62,12 @@ services:
         SERVICE_NAME: account-service
     container_name: devsu-account-service
     depends_on:
-      account-db:
+      app-db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
     environment:
-      ACCOUNT_DB_URL: jdbc:postgresql://account-db:5432/accounts_db
+      ACCOUNT_DB_URL: jdbc:postgresql://app-db:5432/devsu_db?currentSchema=account_service
       ACCOUNT_DB_USERNAME: devsu
       ACCOUNT_DB_PASSWORD: devsu
       RABBITMQ_HOST: rabbitmq
@@ -97,5 +81,4 @@ services:
       - "8082:8082"
 
 volumes:
-  customer-db-data:
-  account-db-data:
+  app-db-data:

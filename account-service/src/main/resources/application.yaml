@@ -5,12 +5,15 @@ spring:
   application:
     name: account-service
   datasource:
-    url: ${ACCOUNT_DB_URL:jdbc:postgresql://localhost:5432/accounts_db}
+    url: ${ACCOUNT_DB_URL:jdbc:postgresql://localhost:5432/devsu_db?currentSchema=account_service}
     username: ${ACCOUNT_DB_USERNAME:devsu}
     password: ${ACCOUNT_DB_PASSWORD:devsu}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
+    properties:
+      hibernate:
+        default_schema: account_service
     open-in-view: false
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}

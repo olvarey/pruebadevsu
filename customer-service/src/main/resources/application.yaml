@@ -5,12 +5,15 @@ spring:
   application:
     name: customer-service
   datasource:
-    url: ${CUSTOMER_DB_URL:jdbc:postgresql://localhost:5432/customers_db}
+    url: ${CUSTOMER_DB_URL:jdbc:postgresql://localhost:5432/devsu_db?currentSchema=customer_service}
     username: ${CUSTOMER_DB_USERNAME:devsu}
     password: ${CUSTOMER_DB_PASSWORD:devsu}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
+    properties:
+      hibernate:
+        default_schema: customer_service
     open-in-view: false
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}

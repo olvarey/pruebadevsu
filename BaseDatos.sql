@@ -1,11 +1,10 @@
 -- BaseDatos.sql
--- PostgreSQL database script for the Devsu challenge.
---
--- The application runs customer-service and account-service with separate databases in
--- Docker Compose. Run the customer table section against the customer database and the
--- account/movement sections against the account database when using separated databases.
+-- Script loaded by Docker Compose in a single shared database: devsu_db.
+-- It creates one schema per microservice and preloads data.
 
-CREATE TABLE IF NOT EXISTS clientes (
+CREATE SCHEMA IF NOT EXISTS customer_service;
+
+CREATE TABLE IF NOT EXISTS customer_service.clientes (
   cliente_id VARCHAR(60) PRIMARY KEY,
   nombre VARCHAR(255) NOT NULL,
   genero VARCHAR(255),
@@ -17,32 +16,7 @@ CREATE TABLE IF NOT EXISTS clientes (
   estado BOOLEAN NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS cuentas (
-  numero_cuenta VARCHAR(50) PRIMARY KEY,
-  tipo_cuenta VARCHAR(50) NOT NULL,
-  saldo_inicial NUMERIC(19, 2) NOT NULL,
-  saldo_disponible NUMERIC(19, 2) NOT NULL,
-  estado BOOLEAN NOT NULL,
-  cliente_id VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS movimientos (
-  movimiento_id VARCHAR(36) PRIMARY KEY,
-  numero_cuenta VARCHAR(50) NOT NULL,
-  fecha TIMESTAMP NOT NULL,
-  tipo_movimiento VARCHAR(50) NOT NULL,
-  valor NUMERIC(19, 2) NOT NULL,
-  saldo NUMERIC(19, 2) NOT NULL,
-  CONSTRAINT fk_movimientos_cuentas
-    FOREIGN KEY (numero_cuenta)
-    REFERENCES cuentas (numero_cuenta)
-);
-
-CREATE INDEX IF NOT EXISTS idx_cuentas_cliente_id ON cuentas (cliente_id);
-CREATE INDEX IF NOT EXISTS idx_movimientos_numero_cuenta_fecha
-  ON movimientos (numero_cuenta, fecha);
-
-INSERT INTO clientes (
+INSERT INTO customer_service.clientes (
   cliente_id,
   nombre,
   genero,
@@ -88,7 +62,35 @@ INSERT INTO clientes (
   )
 ON CONFLICT (cliente_id) DO NOTHING;
 
-INSERT INTO cuentas (
+CREATE SCHEMA IF NOT EXISTS account_service;
+
+CREATE TABLE IF NOT EXISTS account_service.cuentas (
+  numero_cuenta VARCHAR(50) PRIMARY KEY,
+  tipo_cuenta VARCHAR(50) NOT NULL,
+  saldo_inicial NUMERIC(19, 2) NOT NULL,
+  saldo_disponible NUMERIC(19, 2) NOT NULL,
+  estado BOOLEAN NOT NULL,
+  cliente_id VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS account_service.movimientos (
+  movimiento_id VARCHAR(36) PRIMARY KEY,
+  numero_cuenta VARCHAR(50) NOT NULL,
+  fecha TIMESTAMP NOT NULL,
+  tipo_movimiento VARCHAR(50) NOT NULL,
+  valor NUMERIC(19, 2) NOT NULL,
+  saldo NUMERIC(19, 2) NOT NULL,
+  CONSTRAINT fk_movimientos_cuentas
+    FOREIGN KEY (numero_cuenta)
+    REFERENCES account_service.cuentas (numero_cuenta)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cuentas_cliente_id
+  ON account_service.cuentas (cliente_id);
+CREATE INDEX IF NOT EXISTS idx_movimientos_numero_cuenta_fecha
+  ON account_service.movimientos (numero_cuenta, fecha);
+
+INSERT INTO account_service.cuentas (
   numero_cuenta,
   tipo_cuenta,
   saldo_inicial,
@@ -103,7 +105,7 @@ INSERT INTO cuentas (
   ('585545', 'Corriente', 1000.00, 1000.00, TRUE, 'CLI-001')
 ON CONFLICT (numero_cuenta) DO NOTHING;
 
-INSERT INTO movimientos (
+INSERT INTO account_service.movimientos (
   movimiento_id,
   numero_cuenta,
   fecha,
