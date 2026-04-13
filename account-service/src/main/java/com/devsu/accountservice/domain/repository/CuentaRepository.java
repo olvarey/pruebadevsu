@@ -16,6 +16,9 @@ public interface CuentaRepository {
   /** Lists every account. */
   List<Cuenta> findAll();
 
+  /** Lists every account owned by a customer. */
+  List<Cuenta> findByClienteId(String clienteId);
+
   /** Saves an account aggregate. */
   Cuenta save(Cuenta cuenta);
 }

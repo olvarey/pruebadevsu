@@ -5,6 +5,7 @@ import com.devsu.accountservice.domain.repository.MovimientoRepository;
 import com.devsu.accountservice.infrastructure.persistence.entity.MovimientoEntity;
 import com.devsu.accountservice.infrastructure.persistence.mapper.MovimientoEntityMapper;
 import com.devsu.accountservice.infrastructure.persistence.repository.SpringDataMovimientoRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,16 @@ public class MovimientoPersistenceAdapter implements MovimientoRepository {
   @Override
   public List<Movimiento> findAll() {
     return springDataMovimientoRepository.findAll().stream()
+        .map(movimientoEntityMapper::toDomain)
+        .toList();
+  }
+
+  @Override
+  public List<Movimiento> findByNumeroCuentaInAndFechaBetween(
+      List<String> numerosCuenta, LocalDateTime start, LocalDateTime end) {
+    return springDataMovimientoRepository
+        .findByNumeroCuentaInAndFechaBetweenOrderByFechaAsc(numerosCuenta, start, end)
+        .stream()
         .map(movimientoEntityMapper::toDomain)
         .toList();
   }

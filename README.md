@@ -71,6 +71,7 @@ The service exposes account and movement CRU operations at:
 ```text
 /api/cuentas
 /api/movimientos
+/api/reportes
 ```
 
 Default port:
@@ -251,6 +252,40 @@ Movement values update the account balance. Positive values are deposits and
 negative values are withdrawals. Withdrawals that exceed the current available
 balance return `Saldo no disponible`.
 
+Report base path:
+
+```text
+http://localhost:8082/api/reportes
+```
+
+Supported report operation:
+
+```text
+GET /api/reportes?fecha={startDate},{endDate}&cliente={clienteId}
+```
+
+The `fecha` query parameter uses an inclusive date range with `yyyy-MM-dd`
+values.
+
+Example account statement request:
+
+```bash
+curl "http://localhost:8082/api/reportes?fecha=2026-04-01,2026-04-30&cliente=CLI-001"
+```
+
+The response includes one row per movement:
+
+```text
+fecha
+cliente
+numeroCuenta
+tipo
+saldoInicial
+estado
+movimiento
+saldoDisponible
+```
+
 ## Configuration
 
 ### customer-service
@@ -401,6 +436,12 @@ Check the updated account balance:
 
 ```bash
 curl http://localhost:8082/api/cuentas/478758
+```
+
+Generate an account statement report:
+
+```bash
+curl "http://localhost:8082/api/reportes?fecha=2026-04-01,2026-04-30&cliente=CLI-001"
 ```
 
 Customer create, update, patch, and delete operations publish customer events to

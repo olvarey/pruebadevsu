@@ -36,6 +36,13 @@ public class CuentaPersistenceAdapter implements CuentaRepository {
   }
 
   @Override
+  public List<Cuenta> findByClienteId(String clienteId) {
+    return springDataCuentaRepository.findByClienteId(clienteId).stream()
+        .map(cuentaEntityMapper::toDomain)
+        .toList();
+  }
+
+  @Override
   public Cuenta save(Cuenta cuenta) {
     CuentaEntity entity = cuentaEntityMapper.toEntity(cuenta);
     return cuentaEntityMapper.toDomain(springDataCuentaRepository.save(entity));
