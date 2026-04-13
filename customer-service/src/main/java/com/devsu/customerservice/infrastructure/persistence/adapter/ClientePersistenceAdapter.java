@@ -1,7 +1,9 @@
-package com.devsu.customerservice.infrastructure.persistence;
+package com.devsu.customerservice.infrastructure.persistence.adapter;
 
 import com.devsu.customerservice.domain.model.Cliente;
 import com.devsu.customerservice.domain.repository.ClienteRepository;
+import com.devsu.customerservice.infrastructure.persistence.mapper.ClienteEntityMapper;
+import com.devsu.customerservice.infrastructure.persistence.repository.SpringDataClienteRepository;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;

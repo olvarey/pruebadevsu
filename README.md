@@ -59,7 +59,19 @@ Default port:
 
 ### account-service
 
-Spring Boot service reserved for account, movement, and report capabilities.
+Owns the account and movement APIs:
+
+- `Cuenta`
+- `DatosCuenta`
+- `Movimiento`
+- `DatosMovimiento`
+
+The service exposes account and movement CRU operations at:
+
+```text
+/api/cuentas
+/api/movimientos
+```
 
 Default port:
 
@@ -180,6 +192,65 @@ Example patch request:
 }
 ```
 
+## Account API
+
+Account base path:
+
+```text
+http://localhost:8082/api/cuentas
+```
+
+Supported account operations:
+
+```text
+POST   /api/cuentas
+GET    /api/cuentas
+GET    /api/cuentas/{numeroCuenta}
+PUT    /api/cuentas/{numeroCuenta}
+PATCH  /api/cuentas/{numeroCuenta}
+```
+
+Example create account request:
+
+```json
+{
+  "numeroCuenta": "478758",
+  "tipoCuenta": "Ahorro",
+  "saldoInicial": 2000.00,
+  "estado": true,
+  "clienteId": "CLI-001"
+}
+```
+
+Movement base path:
+
+```text
+http://localhost:8082/api/movimientos
+```
+
+Supported movement operations:
+
+```text
+POST   /api/movimientos
+GET    /api/movimientos
+GET    /api/movimientos/{movimientoId}
+PUT    /api/movimientos/{movimientoId}
+PATCH  /api/movimientos/{movimientoId}
+```
+
+Example create movement request:
+
+```json
+{
+  "numeroCuenta": "478758",
+  "valor": -575.00
+}
+```
+
+Movement values update the account balance. Positive values are deposits and
+negative values are withdrawals. Withdrawals that exceed the current available
+balance return `Saldo no disponible`.
+
 ## Configuration
 
 ### customer-service
@@ -299,6 +370,37 @@ List customers:
 
 ```bash
 curl http://localhost:8081/api/clientes
+```
+
+Create an account:
+
+```bash
+curl -i -X POST http://localhost:8082/api/cuentas \
+  -H "Content-Type: application/json" \
+  -d '{
+    "numeroCuenta": "478758",
+    "tipoCuenta": "Ahorro",
+    "saldoInicial": 2000.00,
+    "estado": true,
+    "clienteId": "CLI-001"
+  }'
+```
+
+Create a withdrawal movement:
+
+```bash
+curl -i -X POST http://localhost:8082/api/movimientos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "numeroCuenta": "478758",
+    "valor": -575.00
+  }'
+```
+
+Check the updated account balance:
+
+```bash
+curl http://localhost:8082/api/cuentas/478758
 ```
 
 Customer create, update, patch, and delete operations publish customer events to

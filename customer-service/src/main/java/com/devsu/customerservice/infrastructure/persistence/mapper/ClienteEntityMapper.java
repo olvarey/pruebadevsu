@@ -1,7 +1,8 @@
-package com.devsu.customerservice.infrastructure.persistence;
+package com.devsu.customerservice.infrastructure.persistence.mapper;
 
 import com.devsu.customerservice.domain.model.Cliente;
 import com.devsu.customerservice.domain.model.DatosPersona;
+import com.devsu.customerservice.infrastructure.persistence.entity.ClienteEntity;
 import org.mapstruct.Mapper;
 
 /** Converts between customer domain objects and JPA entities. */
