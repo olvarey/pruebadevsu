@@ -17,7 +17,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(
     properties = {
       "spring.datasource.url=jdbc:h2:mem:account_workflow_integration_test;"
-          + "MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+          + "MODE=PostgreSQL;DB_CLOSE_DELAY=-1;"
+          + "INIT=CREATE SCHEMA IF NOT EXISTS account_service",
       "spring.datasource.driver-class-name=org.h2.Driver",
       "spring.jpa.hibernate.ddl-auto=create-drop",
       "spring.rabbitmq.listener.simple.auto-startup=false"
