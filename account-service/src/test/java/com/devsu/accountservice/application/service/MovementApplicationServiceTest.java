@@ -3,11 +3,11 @@ package com.devsu.accountservice.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.devsu.accountservice.application.dto.MovimientoPatchRequest;
-import com.devsu.accountservice.application.dto.MovimientoRequest;
-import com.devsu.accountservice.application.dto.MovimientoResponse;
-import com.devsu.accountservice.application.mapper.MovimientoMapper;
-import com.devsu.accountservice.application.usecase.MovimientoUseCase;
+import com.devsu.accountservice.application.command.CreateMovimientoCommand;
+import com.devsu.accountservice.application.command.PatchMovimientoCommand;
+import com.devsu.accountservice.application.command.ReplaceMovimientoCommand;
+import com.devsu.accountservice.application.port.out.CuentaRepository;
+import com.devsu.accountservice.application.port.out.MovimientoRepository;
 import com.devsu.accountservice.domain.exception.CuentaNoEncontradaException;
 import com.devsu.accountservice.domain.exception.MovimientoNoEncontradoException;
 import com.devsu.accountservice.domain.exception.SaldoNoDisponibleException;
@@ -15,8 +15,6 @@ import com.devsu.accountservice.domain.model.Cuenta;
 import com.devsu.accountservice.domain.model.DatosCuenta;
 import com.devsu.accountservice.domain.model.DatosMovimiento;
 import com.devsu.accountservice.domain.model.Movimiento;
-import com.devsu.accountservice.domain.repository.CuentaRepository;
-import com.devsu.accountservice.domain.repository.MovimientoRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,7 +31,7 @@ class MovementApplicationServiceTest {
     InMemoryMovimientoRepository movimientos = new InMemoryMovimientoRepository();
     cuentas.save(account("100.00"));
 
-    MovimientoResponse response = useCase(cuentas, movimientos).create(request("-25.00"));
+    var response = useCase(cuentas, movimientos).create(createCommand("-25.00"));
 
     assertThat(cuentas.findByNumeroCuenta("478758").orElseThrow().getSaldoDisponible())
         .isEqualByComparingTo("75.00");
@@ -47,7 +45,7 @@ class MovementApplicationServiceTest {
     InMemoryMovimientoRepository movimientos = new InMemoryMovimientoRepository();
     cuentas.save(account("100.00"));
 
-    assertThatThrownBy(() -> useCase(cuentas, movimientos).create(request("-150.00")))
+    assertThatThrownBy(() -> useCase(cuentas, movimientos).create(createCommand("-150.00")))
         .isInstanceOf(SaldoNoDisponibleException.class);
     assertThat(cuentas.findByNumeroCuenta("478758").orElseThrow().getSaldoDisponible())
         .isEqualByComparingTo("100.00");
@@ -63,7 +61,7 @@ class MovementApplicationServiceTest {
     movimientos.save(current);
 
     useCase(cuentas, movimientos).replace(
-        current.getMovimientoId(), request("-10.00"));
+        current.getMovimientoId(), replaceCommand("-10.00"));
 
     assertThat(cuentas.findByNumeroCuenta("478758").orElseThrow().getSaldoDisponible())
         .isEqualByComparingTo("115.00");
@@ -78,7 +76,7 @@ class MovementApplicationServiceTest {
     movimientos.save(current);
 
     useCase(cuentas, movimientos).patch(
-        current.getMovimientoId(), new MovimientoPatchRequest(null, new BigDecimal("-15.00")));
+        current.getMovimientoId(), new PatchMovimientoCommand(null, new BigDecimal("-15.00")));
 
     assertThat(cuentas.findByNumeroCuenta("478758").orElseThrow().getSaldoDisponible())
         .isEqualByComparingTo("110.00");
@@ -88,7 +86,7 @@ class MovementApplicationServiceTest {
   void createRejectsMissingAccount() {
     assertThatThrownBy(
             () -> useCase(new InMemoryCuentaRepository(), new InMemoryMovimientoRepository())
-                .create(request("10.00")))
+                .create(createCommand("10.00")))
         .isInstanceOf(CuentaNoEncontradaException.class);
   }
 
@@ -109,17 +107,21 @@ class MovementApplicationServiceTest {
     movimientos.save(current);
 
     assertThatThrownBy(() -> useCase(cuentas, movimientos).replace(
-            current.getMovimientoId(), new MovimientoRequest("other", null, new BigDecimal("-10.00"))))
+            current.getMovimientoId(), new ReplaceMovimientoCommand("other", null, new BigDecimal("-10.00"))))
         .isInstanceOf(CuentaNoEncontradaException.class);
   }
 
-  private MovimientoUseCase useCase(
+  private MovimientoApplicationService useCase(
       InMemoryCuentaRepository cuentas, InMemoryMovimientoRepository movimientos) {
-    return new MovimientoUseCase(cuentas, movimientos, new TestMovimientoMapper());
+    return new MovimientoApplicationService(cuentas, movimientos);
   }
 
-  private MovimientoRequest request(String valor) {
-    return new MovimientoRequest("478758", LocalDateTime.parse("2026-04-10T09:00:00"), new BigDecimal(valor));
+  private CreateMovimientoCommand createCommand(String valor) {
+    return new CreateMovimientoCommand("478758", LocalDateTime.parse("2026-04-10T09:00:00"), new BigDecimal(valor));
+  }
+
+  private ReplaceMovimientoCommand replaceCommand(String valor) {
+    return new ReplaceMovimientoCommand("478758", LocalDateTime.parse("2026-04-10T09:00:00"), new BigDecimal(valor));
   }
 
   private Cuenta account(String saldo) {
@@ -133,16 +135,6 @@ class MovementApplicationServiceTest {
         "MOV-001",
         new DatosMovimiento("478758", LocalDateTime.parse("2026-04-10T09:00:00"),
             DatosMovimiento.tipoPara(amount), amount, new BigDecimal(saldo)));
-  }
-
-  private static class TestMovimientoMapper implements MovimientoMapper {
-
-    @Override
-    public MovimientoResponse toResponse(Movimiento movimiento) {
-      return new MovimientoResponse(
-          movimiento.getMovimientoId(), movimiento.getNumeroCuenta(), movimiento.getFecha(),
-          movimiento.getTipoMovimiento(), movimiento.getValor(), movimiento.getSaldo());
-    }
   }
 
   private static class InMemoryCuentaRepository implements CuentaRepository {
