@@ -19,12 +19,14 @@ public class MovimientoPersistenceAdapter implements MovimientoRepository {
   private final SpringDataMovimientoRepository springDataMovimientoRepository;
   private final MovimientoEntityMapper movimientoEntityMapper;
 
+  /** {@inheritDoc} */
   @Override
   public Optional<Movimiento> findByMovimientoId(String movimientoId) {
     return springDataMovimientoRepository.findById(movimientoId)
         .map(movimientoEntityMapper::toDomain);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Movimiento> findAll() {
     return springDataMovimientoRepository.findAll().stream()
@@ -32,6 +34,7 @@ public class MovimientoPersistenceAdapter implements MovimientoRepository {
         .toList();
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Movimiento> findByNumeroCuentaInAndFechaBetween(
       List<String> numerosCuenta, LocalDateTime start, LocalDateTime end) {
@@ -42,6 +45,7 @@ public class MovimientoPersistenceAdapter implements MovimientoRepository {
         .toList();
   }
 
+  /** {@inheritDoc} */
   @Override
   public Movimiento save(Movimiento movimiento) {
     MovimientoEntity entity = movimientoEntityMapper.toEntity(movimiento);

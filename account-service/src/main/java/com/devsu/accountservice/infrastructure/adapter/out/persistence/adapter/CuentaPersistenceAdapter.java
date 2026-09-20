@@ -18,16 +18,19 @@ public class CuentaPersistenceAdapter implements CuentaRepository {
   private final SpringDataCuentaRepository springDataCuentaRepository;
   private final CuentaEntityMapper cuentaEntityMapper;
 
+  /** {@inheritDoc} */
   @Override
   public boolean existsByNumeroCuenta(String numeroCuenta) {
     return springDataCuentaRepository.existsById(numeroCuenta);
   }
 
+  /** {@inheritDoc} */
   @Override
   public Optional<Cuenta> findByNumeroCuenta(String numeroCuenta) {
     return springDataCuentaRepository.findById(numeroCuenta).map(cuentaEntityMapper::toDomain);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Cuenta> findAll() {
     return springDataCuentaRepository.findAll().stream()
@@ -35,6 +38,7 @@ public class CuentaPersistenceAdapter implements CuentaRepository {
         .toList();
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Cuenta> findByClienteId(String clienteId) {
     return springDataCuentaRepository.findByClienteId(clienteId).stream()
@@ -42,6 +46,7 @@ public class CuentaPersistenceAdapter implements CuentaRepository {
         .toList();
   }
 
+  /** {@inheritDoc} */
   @Override
   public Cuenta save(Cuenta cuenta) {
     CuentaEntity entity = cuentaEntityMapper.toEntity(cuenta);

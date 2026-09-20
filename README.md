@@ -88,14 +88,22 @@ The code follows clean architecture boundaries inside each service:
 domain
   model
   exception
-  repository
 application
-  dto
-  mapper
-  usecase
+  command
+  port
+    in
+    out
+  result
+  service
 infrastructure
-  persistence
-  web
+  adapter
+    in
+      web
+      messaging
+    out
+      persistence
+      messaging
+  config
 ```
 
 Dependency direction is inward:
@@ -106,6 +114,11 @@ infrastructure -> application -> domain
 
 The domain layer does not depend on Spring, JPA, web DTOs, or persistence
 entities.
+
+Both services use explicit inbound and outbound ports. HTTP DTOs and message
+payloads stay in inbound adapters; JPA entities and Spring Data repositories
+stay in outbound persistence adapters. Transaction boundaries are defined in
+infrastructure configuration rather than application services.
 
 ## customer-service Design
 

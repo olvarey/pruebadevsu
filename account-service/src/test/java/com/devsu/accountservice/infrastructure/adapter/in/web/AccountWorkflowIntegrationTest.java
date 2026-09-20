@@ -1,4 +1,4 @@
-package com.devsu.accountservice.infrastructure.web;
+package com.devsu.accountservice.infrastructure.adapter.in.web;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
