@@ -1,4 +1,4 @@
-package com.devsu.accountservice.application.dto;
+package com.devsu.accountservice.infrastructure.adapter.in.web.dto;
 
 import java.math.BigDecimal;
 
