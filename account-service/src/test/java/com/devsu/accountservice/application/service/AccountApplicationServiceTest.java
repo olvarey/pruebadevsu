@@ -3,16 +3,15 @@ package com.devsu.accountservice.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.devsu.accountservice.application.dto.CuentaPatchRequest;
-import com.devsu.accountservice.application.dto.CuentaRequest;
-import com.devsu.accountservice.application.dto.CuentaResponse;
-import com.devsu.accountservice.application.mapper.CuentaMapper;
-import com.devsu.accountservice.application.usecase.CuentaUseCase;
+import com.devsu.accountservice.application.command.CreateCuentaCommand;
+import com.devsu.accountservice.application.command.PatchCuentaCommand;
+import com.devsu.accountservice.application.command.ReplaceCuentaCommand;
+import com.devsu.accountservice.application.result.CuentaResult;
+import com.devsu.accountservice.application.port.out.CuentaRepository;
 import com.devsu.accountservice.domain.exception.CuentaDuplicadaException;
 import com.devsu.accountservice.domain.exception.CuentaNoEncontradaException;
 import com.devsu.accountservice.domain.model.Cuenta;
 import com.devsu.accountservice.domain.model.DatosCuenta;
-import com.devsu.accountservice.domain.repository.CuentaRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,16 +25,16 @@ class AccountApplicationServiceTest {
   void createRejectsDuplicateAccountNumbers() {
     InMemoryCuentaRepository repository = new InMemoryCuentaRepository();
     repository.save(account("478758", "2000.00", "CLI-001"));
-    CuentaUseCase useCase = new CuentaUseCase(repository, new TestCuentaMapper());
+    CuentaApplicationService useCase = new CuentaApplicationService(repository);
 
-    assertThatThrownBy(() -> useCase.create(request("478758", "CLI-001")))
+    assertThatThrownBy(() -> useCase.create(createCommand("478758", "CLI-001")))
         .isInstanceOf(CuentaDuplicadaException.class)
         .hasMessageContaining("478758");
   }
 
   @Test
   void getRejectsMissingAccount() {
-    CuentaUseCase useCase = new CuentaUseCase(new InMemoryCuentaRepository(), new TestCuentaMapper());
+    CuentaApplicationService useCase = new CuentaApplicationService(new InMemoryCuentaRepository());
 
     assertThatThrownBy(() -> useCase.get("missing"))
         .isInstanceOf(CuentaNoEncontradaException.class);
@@ -45,10 +44,9 @@ class AccountApplicationServiceTest {
   void replacePreservesAvailableBalance() {
     InMemoryCuentaRepository repository = new InMemoryCuentaRepository();
     repository.save(account("478758", "1425.00", "CLI-001"));
-    CuentaUseCase useCase = new CuentaUseCase(repository, new TestCuentaMapper());
+    CuentaApplicationService useCase = new CuentaApplicationService(repository);
 
-    CuentaResponse response =
-        useCase.replace("478758", request("478758", "CLI-002"));
+    CuentaResult response = useCase.replace("478758", replaceCommand("478758", "CLI-002"));
 
     assertThat(response.saldoDisponible()).isEqualByComparingTo("1425.00");
     assertThat(response.clienteId()).isEqualTo("CLI-002");
@@ -58,10 +56,10 @@ class AccountApplicationServiceTest {
   void patchUpdatesOnlyProvidedAccountFields() {
     InMemoryCuentaRepository repository = new InMemoryCuentaRepository();
     repository.save(account("478758", "2000.00", "CLI-001"));
-    CuentaUseCase useCase = new CuentaUseCase(repository, new TestCuentaMapper());
+    CuentaApplicationService useCase = new CuentaApplicationService(repository);
 
-    CuentaResponse response =
-        useCase.patch("478758", new CuentaPatchRequest("Corriente", null, null, null));
+    CuentaResult response = useCase.patch(
+        "478758", new PatchCuentaCommand("Corriente", null, null, null));
 
     assertThat(response.tipoCuenta()).isEqualTo("Corriente");
     assertThat(response.saldoInicial()).isEqualByComparingTo("2000.00");
@@ -74,13 +72,18 @@ class AccountApplicationServiceTest {
     repository.save(account("478758", "2000.00", "CLI-001"));
     repository.save(account("225487", "100.00", "CLI-002"));
 
-    assertThat(new CuentaUseCase(repository, new TestCuentaMapper()).list())
-        .extracting(CuentaResponse::numeroCuenta)
+    assertThat(new CuentaApplicationService(repository).list())
+        .extracting(CuentaResult::numeroCuenta)
         .containsExactly("478758", "225487");
   }
 
-  private CuentaRequest request(String numeroCuenta, String clienteId) {
-    return new CuentaRequest(
+  private CreateCuentaCommand createCommand(String numeroCuenta, String clienteId) {
+    return new CreateCuentaCommand(
+        numeroCuenta, "Ahorro", new BigDecimal("2000.00"), true, clienteId);
+  }
+
+  private ReplaceCuentaCommand replaceCommand(String numeroCuenta, String clienteId) {
+    return new ReplaceCuentaCommand(
         numeroCuenta, "Ahorro", new BigDecimal("2000.00"), true, clienteId);
   }
 
@@ -88,16 +91,6 @@ class AccountApplicationServiceTest {
     BigDecimal amount = new BigDecimal(saldo);
     return new Cuenta(
         numeroCuenta, new DatosCuenta("Ahorro", amount, amount, true, clienteId));
-  }
-
-  private static class TestCuentaMapper implements CuentaMapper {
-
-    @Override
-    public CuentaResponse toResponse(Cuenta cuenta) {
-      return new CuentaResponse(
-          cuenta.getNumeroCuenta(), cuenta.getTipoCuenta(), cuenta.getSaldoInicial(),
-          cuenta.getSaldoDisponible(), cuenta.isEstado(), cuenta.getClienteId());
-    }
   }
 
   private static class InMemoryCuentaRepository implements CuentaRepository {
